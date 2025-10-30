@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ file.filename }} - {{ repository.name }}{% endblock %}
+
+{% block content %}
+<section class="file-view-section">
+  <header class="file-header">
+    <h1>
+      <a href="{{ url_for('view_repository', username=owner.username, repo_name=repository.name) }}">{{ repository.name }}</a>
+      / {{ file.filename }}
+    </h1>
+    <p class="file-info">
+      Size: {{ (file.size or 0) }} bytes
+      {% if file.language %}| Language: {{ file.language }}{% endif %}
+    </p>
+  </header>
+
+  <div class="file-content">
+    <pre><code>{{ content }}</code></pre>
+  </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<style>
+.file-view-section {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.file-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.file-header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.file-header h1 a {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.file-header h1 a:hover {
+  text-decoration: underline;
+}
+
+.file-info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.file-content {
+  background: #f6f8fa;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 15px;
+  overflow-x: auto;
+}
+
+.file-content pre {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+</style>
+{% endblock %}

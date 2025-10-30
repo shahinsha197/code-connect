@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ repository.name }} - Repository{% endblock %}
+
+{% block content %}
+<section class="repository-section">
+  <header class="repo-header">
+    <h1>{{ repository.name }}</h1>
+    <p class="repo-description">{{ repository.description }}</p>
+    <p class="repo-owner">Owner: <a href="{{ url_for('profile', username=owner.username) }}">{{ owner.display_name }}</a></p>
+  </header>
+
+{% block styles %}
+<style>
+.repository-section {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.repo-header {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 15px;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.file-item {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.file-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #0366d6;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.file-link:hover {
+  background-color: #f6f8fa;
+  text-decoration: none;
+}
+
+.file-icon {
+  margin-right: 10px;
+}
+</style>
+{% endblock %}
+
+  <div class="repo-files">
+    <h2>Files</h2>
+    {% if files %}
+      <ul class="file-list">
+        {% for f in files %}
+        <li class="file-item">
+          <a href="{{ url_for('view_file', username=owner.username, repo_name=repository.name, file_id=f.id) }}" class="file-link">
+            <span class="file-icon">📄</span>
+            {{ f.filename }} ({{ (f.size or 0) }} bytes)
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No files yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

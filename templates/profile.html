@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.display_name }} (@{{ profile_user.username }}) - CodeConnect{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if profile_user.avatar %}
+            <img src="{{ profile_user.avatar }}" alt="{{ profile_user.display_name }}" style="width: 80px; height: 80px; border-radius: 50%;">
+            {% else %}
+            <div class="avatar-placeholder large">{{ profile_user.display_name[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="profile-info">
+            <h1>{{ profile_user.display_name }}</h1>
+            <p class="username">@{{ profile_user.username }}</p>
+            {% if profile_user.bio %}
+            <p class="bio">{{ profile_user.bio }}</p>
+            {% endif %}
+            
+            <div class="profile-stats">
+                <div class="stat">
+                    <span id="follower-count-display" class="stat-number">{{ profile_user.follower_count }}</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ profile_user.following_count }}</span>
+                    <span class="stat-label">Following</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ profile_user.repo_count }}</span>
+                    <span class="stat-label">Repositories</span>
+                </div>
+            </div>
+            
+            {% if user and user.id != profile_user.id %}
+            <div class="profile-actions">
+                <button id="profile-follow-btn" 
+                        class="btn {{ 'btn-secondary' if is_following else 'btn-primary' }}" 
+                        data-username="{{ profile_user.username }}"
+                        data-action="{{ 'unfollow' if is_following else 'follow' }}">
+                    {{ 'Unfollow' if is_following else 'Follow' }}
+                </button>
+                <button class="btn btn-outline" onclick="startConversation('{{ profile_user.username }}')">Message</button>
+            </div>
+            {% endif %}
+            
+            {% if user and user.id == profile_user.id %}
+            <div class="profile-actions">
+                <button class="btn btn-outline" id="editProfileBtn">Edit Profile</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal (owner only) -->
+    {% if user and user.id == profile_user.id %}
+    <div id="editProfileModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <button class="modal-close" onclick="window.closeModal('editProfileModal')">&times;</button>
+            </div>
+            <form id="editProfileForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="editDisplayName">Display name</label>
+                    <input type="text" id="editDisplayName" name="display_name" value="{{ profile_user.display_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBio">Bio</label>
+                    <textarea id="editBio" name="bio" rows="3">{{ profile_user.bio or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editAllowDms">Allow DMs</label>
+                    <select id="editAllowDms" name="allow_dms_from">
+                        <option value="everyone" {% if profile_user.allow_dms_from == 'everyone' %}selected{% endif %}>Everyone</option>
+                        <option value="followers" {% if profile_user.allow_dms_from == 'followers' %}selected{% endif %}>Followers</option>
+                        <option value="none" {% if profile_user.allow_dms_from == 'none' %}selected{% endif %}>Nobody</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editAvatar">Avatar (image)</label>
+                    <input type="file" id="editAvatar" name="avatar" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="editPublicKey">Public Key (PEM/SPKI base64)</label>
+                    <textarea id="editPublicKey" name="public_key" rows="4">{{ profile_user.public_key or '' }}</textarea>
+                    <small style="color:var(--text-muted);">Paste your public key (SPKI base64) here to enable encrypted messaging.</small>
+                </div>
+                <div style="text-align:right; margin-top:1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="window.closeModal('editProfileModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="profile-content">
+        <div class="profile-tabs">
+            <button class="tab-btn active" onclick="showTab(event, 'repositories')">Repositories</button>
+            <button class="tab-btn" onclick="showTab(event, 'activity')">Activity</button>
+        </div>
+        
+        <div id="repositoriesTab" class="tab-content">
+            <div class="repositories-grid">
+                {% for repo in repositories %}
+                <div class="repo-card">
+                    <div class="repo-header">
+                        <h3><a href="/repo/{{ profile_user.username }}/{{ repo.name }}">{{ repo.name }}</a></h3>
+                        <span class="repo-visibility">{{ 'Public' if repo.is_public else 'Private' }}</span>
+                    </div>
+                    {% if repo.description %}
+                    <p class="repo-description">{{ repo.description }}</p>
+                    {% endif %}
+                    <div class="repo-meta">
+                        {% if repo.language %}
+                        <span class="repo-language">{{ repo.language }}</span>
+                        {% endif %}
+                        <span class="repo-stars">⭐ {{ repo.stars }}</span>
+                        <span class="repo-updated">Updated {{ repo.updated_at.strftime('%b %d') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not repositories %}
+                <p>{{ profile_user.display_name }} has no public repositories.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div id="activityTab" class="tab-content" style="display: none;">
+            <p>Activity feed coming soon...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(event, tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(tabName + 'Tab').style.display = 'block';
+    event.target.classList.add('active');
+}
+
+function startConversation(username) {
+    // This should redirect to messages and open the chat
+    // For now, just redirects
+    window.location.href = '/messages'; 
+    // In main.js, you'd need logic to check for a query param
+    // and auto-open this chat.
+}
+
+// Follow/unfollow logic is handled by main.js
+
+document.addEventListener('DOMContentLoaded', () => {
+    const editBtn = document.getElementById('editProfileBtn');
+    if (editBtn) {
+        editBtn.addEventListener('click', () => window.openModal('editProfileModal'));
+    }
+
+    const form = document.getElementById('editProfileForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const fd = new FormData(form);
+
+            try {
+                const resp = await fetch('/api/update_profile', getFetchOptions({ method: 'POST', body: fd }));
+                const data = await resp.json();
+                if (data.success) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    alert('Could not update profile: ' + (data.message || 'Unknown error'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save';
+                }
+            } catch (err) {
+                console.error('Profile update failed:', err);
+                alert('Network error while updating profile.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

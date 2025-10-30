@@ -1,0 +1,557 @@
+/* 
+ * CodeConnect - Dark Theme
+ * Beautiful, modern dark mode with smooth transitions
+ */
+
+[data-theme="dark"] {
+    /* Color Palette */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #1c2128;
+    --bg-hover: #21262d;
+    --bg-active: #30363d;
+    
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --text-link: #58a6ff;
+    --text-link-hover: #79c0ff;
+    
+    --border-color: #30363d;
+    --border-muted: #21262d;
+    
+    --accent-primary: #58a6ff;
+    --accent-secondary: #1f6feb;
+    --accent-success: #3fb950;
+    --accent-warning: #d29922;
+    --accent-danger: #f85149;
+    --accent-purple: #a371f7;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================================
+   Base Styles
+   ============================================================================ */
+
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(88, 166, 255, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(163, 113, 247, 0.05) 0px, transparent 50%);
+}
+
+/* ============================================================================
+   Navigation
+   ============================================================================ */
+
+[data-theme="dark"] .navbar {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .nav-brand a {
+    color: var(--accent-primary);
+    text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+}
+
+[data-theme="dark"] .nav-link {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .nav-link:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+/* ============================================================================
+   Cards & Containers
+   ============================================================================ */
+
+[data-theme="dark"] .post-card,
+[data-theme="dark"] .repo-card,
+[data-theme="dark"] .profile-header,
+[data-theme="dark"] .profile-content,
+[data-theme="dark"] .repository-header,
+[data-theme="dark"] .repository-content,
+[data-theme="dark"] .messages-container,
+[data-theme="dark"] .auth-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .post-card:hover,
+[data-theme="dark"] .repo-card:hover {
+    border-color: var(--accent-secondary);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* ============================================================================
+   Text & Links
+   ============================================================================ */
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] a {
+    color: var(--text-link);
+}
+
+[data-theme="dark"] a:hover {
+    color: var(--text-link-hover);
+}
+
+[data-theme="dark"] .username,
+[data-theme="dark"] .post-time,
+[data-theme="dark"] .repo-meta,
+[data-theme="dark"] .text-secondary {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted);
+}
+
+/* ============================================================================
+   Buttons
+   ============================================================================ */
+
+[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: linear-gradient(135deg, var(--text-link-hover) 0%, var(--accent-primary) 100%);
+    box-shadow: 0 6px 16px rgba(88, 166, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .btn-outline {
+    background: transparent;
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    box-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+}
+
+[data-theme="dark"] .action-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .action-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+[data-theme="dark"] .action-btn.liked {
+    color: var(--accent-danger);
+}
+
+/* ============================================================================
+   Forms & Inputs
+   ============================================================================ */
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] label {
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   Code Snippets
+   ============================================================================ */
+
+[data-theme="dark"] .code-snippet,
+[data-theme="dark"] pre[class*="language-"] {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .code-header {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] code[class*="language-"] {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .file-viewer {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .file-viewer pre {
+    background: var(--bg-tertiary);
+}
+
+/* ============================================================================
+   Repository & File Browser
+   ============================================================================ */
+
+[data-theme="dark"] .repo-visibility,
+[data-theme="dark"] .repo-language {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .file-item {
+    border-bottom: 1px solid var(--border-muted);
+}
+
+[data-theme="dark"] .file-item:hover {
+    background-color: var(--bg-hover);
+}
+
+[data-theme="dark"] .file-name {
+    color: var(--accent-primary);
+}
+
+[data-theme="dark"] .shared-repo {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .shared-repo:hover {
+    border-color: var(--accent-primary);
+}
+
+/* ============================================================================
+   Messages
+   ============================================================================ */
+
+[data-theme="dark"] .messages-sidebar {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .messages-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .conversation-item {
+    border-bottom: 1px solid var(--border-muted);
+}
+
+[data-theme="dark"] .conversation-item:hover {
+    background-color: var(--bg-hover);
+}
+
+[data-theme="dark"] .conversation-item.active {
+    background: linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-secondary) 100%);
+    border-left: 3px solid var(--accent-primary);
+}
+
+[data-theme="dark"] .conversation-item.unread h4 {
+    color: var(--accent-primary);
+}
+
+[data-theme="dark"] .conversation-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .message.sent .message-content {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    color: white;
+}
+
+[data-theme="dark"] .message.received .message-content {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .message.system-message {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .message.system-message.error {
+    background: rgba(248, 81, 73, 0.1);
+    color: var(--accent-danger);
+    border-color: var(--accent-danger);
+}
+
+[data-theme="dark"] .message-input-area {
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .message-input-container input {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .message-input-container input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+/* ============================================================================
+   Modals
+   ============================================================================ */
+
+[data-theme="dark"] .modal {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .modal-close {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   Tabs
+   ============================================================================ */
+
+[data-theme="dark"] .profile-tabs,
+[data-theme="dark"] .repo-tabs {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .tab-btn {
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+}
+
+[data-theme="dark"] .tab-btn.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .tab-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+/* ============================================================================
+   Avatar & Profile
+   ============================================================================ */
+
+[data-theme="dark"] .avatar-placeholder {
+    background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-primary) 100%);
+    box-shadow: 0 4px 12px rgba(163, 113, 247, 0.3);
+}
+
+[data-theme="dark"] .profile-stats {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+[data-theme="dark"] .stat-number {
+    color: var(--accent-primary);
+}
+
+/* ============================================================================
+   Authentication
+   ============================================================================ */
+
+[data-theme="dark"] .auth-container {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+}
+
+[data-theme="dark"] .auth-card {
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-xl);
+}
+
+[data-theme="dark"] .auth-tabs {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .auth-tab {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .auth-tab.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .auth-message.error {
+    background-color: rgba(248, 81, 73, 0.1);
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
+}
+
+[data-theme="dark"] .auth-message.info {
+    background-color: rgba(88, 166, 255, 0.1);
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+}
+
+/* ============================================================================
+   Scrollbar
+   ============================================================================ */
+
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-color);
+}
+
+/* ============================================================================
+   Empty States
+   ============================================================================ */
+
+[data-theme="dark"] .empty-state {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .empty-state h3 {
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   Badges & Tags
+   ============================================================================ */
+
+[data-theme="dark"] .repo-stars,
+[data-theme="dark"] .repo-language {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .star-btn.starred {
+    color: #f1e05a;
+}
+
+/* ============================================================================
+   Special Effects & Animations
+   ============================================================================ */
+
+[data-theme="dark"] .post-card,
+[data-theme="dark"] .repo-card,
+[data-theme="dark"] .conversation-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glow effect for primary elements */
+[data-theme="dark"] .nav-brand a:hover {
+    text-shadow: 0 0 30px rgba(88, 166, 255, 0.6);
+}
+
+/* Smooth color transitions */
+[data-theme="dark"] * {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Glassmorphism effect for modals */
+[data-theme="dark"] .modal-content {
+    background: rgba(22, 27, 34, 0.95);
+    backdrop-filter: blur(16px);
+}
+
+/* ============================================================================
+   Loading States
+   ============================================================================ */
+
+[data-theme="dark"] button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================================
+   Syntax Highlighting Override
+   ============================================================================ */
+
+[data-theme="dark"] .token.comment {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .token.string {
+    color: #a5d6ff;
+}
+
+[data-theme="dark"] .token.keyword {
+    color: #ff7b72;
+}
+
+[data-theme="dark"] .token.function {
+    color: #d2a8ff;
+}
+
+[data-theme="dark"] .token.number {
+    color: #79c0ff;
+}

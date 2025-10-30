@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}My Repositories - CodeConnect{% endblock %}
+
+{% block content %}
+<div class="repositories-container">
+    <div class="repositories-header">
+        <h1>My Repositories</h1>
+        <button class="btn btn-primary" onclick="window.openModal('createRepoModal')">New Repository</button>
+    </div>
+    
+    <div class="repositories-grid">
+        {% for repo in repositories %}
+        <div class="repo-card">
+            <div class="repo-header">
+                <h3><a href="/repo/{{ user.username }}/{{ repo.name }}">{{ repo.name }}</a></h3>
+                <span class="repo-visibility">{{ 'Public' if repo.is_public else 'Private' }}</span>
+            </div>
+            {% if repo.description %}
+            <p class="repo-description">{{ repo.description }}</p>
+            {% endif %}
+            <div class="repo-meta">
+                {% if repo.language %}
+                <span class="repo-language">{{ repo.language }}</span>
+                {% endif %}
+                <span class="repo-stars">⭐ {{ repo.stars }}</span>
+                <span class="repo-updated">Updated {{ repo.updated_at.strftime('%b %d') }}</span>
+            </div>
+            <div class="repo-actions">
+                </div>
+        </div>
+        {% endfor %}
+        
+        {% if not repositories %}
+        <div classs="empty-state" style="grid-column: 1 / -1;">
+             <h3>You don't have any repositories yet.</h3>
+             <p>Create one to get started!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="createRepoModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create New Repository</h3>
+            <button class="modal-close" onclick="window.closeModal('createRepoModal')">&times;</button>
+        </div>
+        <form id="createRepoForm">
+            <div class="form-group">
+                <label for="repoName">Repository Name</label>
+                <input type="text" id="repoName" name="name" required placeholder="my-awesome-project">
+            </div>
+            <div class="form-group">
+                <label for="repoDescription">Description</label>
+                <textarea id="repoDescription" name="description" rows="3" placeholder="What does this repository do?"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="repoLanguage">Primary Language</label>
+                <input type="text" id="repoLanguage" name="language" placeholder="e.g., JavaScript, Python, Java">
+            </div>
+            <div class="form-group">
+                <label for="repoTags">Tags (comma-separated)</label>
+                <input type="text" id="repoTags" name="tags" placeholder="web, api, frontend">
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="repoPublic" name="is_public" checked>
+                    Make this repository public
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin: 1.5rem;">Create Repository</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('createRepoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        if (data.tags) {
+            data.tags = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        } else {
+            data.tags = [];
+        }
+        
+        data.is_public = document.getElementById('repoPublic').checked;
+        
+        try {
+            // 'getFetchOptions' is from main.js
+            const response = await fetch('/api/create_repo', getFetchOptions({
+                method: 'POST',
+                body: JSON.stringify(data)
+            }));
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                window.closeModal('createRepoModal');
+                location.reload();
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('An error occurred: ' + error.message, 'error');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Login - CodeConnect{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>CodeConnect</h1>
+            <p>The social platform for developers</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="showLogin(event)">Login</button>
+            <button class="auth-tab" onclick="showRegister(event)">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+            <div class="form-group">
+                <label for="loginUsername">Username or Email</label>
+                <input type="text" id="loginUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+
+        <form id="registerForm" class="auth-form" style="display: none;">
+            <div class="form-group">
+                <label for="registerUsername">Username</label>
+                <input type="text" id="registerUsername" name="username" required 
+                       pattern="[a-zA-Z0-9_-]{3,20}" 
+                       title="3-20 characters: letters, numbers, underscore, hyphen">
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="registerDisplayName">Display Name</label>
+                <input type="text" id="registerDisplayName" name="display_name" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" name="password" required 
+                       minlength="8"
+                       title="At least 8 characters">
+                <small style="color: var(--text-muted); font-size: 0.875rem;">
+                    Minimum 8 characters recommended
+                </small>
+            </div>
+            <button type="submit" class="btn btn-primary" id="registerBtn">Register</button>
+        </form>
+
+        <div id="authMessage" class="auth-message" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; text-align: center;">
+        <div class="spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+        <p id="loadingMessage">Generating encryption keys...</p>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    padding: 1rem;
+}
+
+.auth-card {
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 450px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    font-size: 2rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    gap: 0;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-base);
+    margin-bottom: -2px;
+}
+
+.auth-tab:hover {
+    color: var(--primary);
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.auth-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.auth-message.error {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.auth-message.info {
+    background-color: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.auth-message.success {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+console.log('Login page script loaded');
+
+// Utility Functions
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+function showLogin(event) {
+    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('registerForm').style.display = 'none';
+    document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    hideAuthMessage();
+}
+
+function showRegister(event) {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'flex';
+    document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    hideAuthMessage();
+}
+
+function showAuthMessage(message, type = 'error') {
+    const msgEl = document.getElementById('authMessage');
+    msgEl.textContent = message;
+    msgEl.className = `auth-message ${type}`;
+    msgEl.style.display = 'block';
+}
+
+function hideAuthMessage() {
+    const msgEl = document.getElementById('authMessage');
+    msgEl.style.display = 'none';
+}
+
+function showLoading(message = 'Processing...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const msgEl = document.getElementById('loadingMessage');
+    msgEl.textContent = message;
+    overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.style.display = 'none';
+}
+
+// Login Handler
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAuthMessage();
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    if (!data.username || !data.password) {
+        showAuthMessage('Please fill in all fields', 'error');
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logging in...';
+    
+    try {
+        console.log('Sending login request...');
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        console.log('Login response status:', response.status);
+        console.log('Login response headers:', response.headers.get('content-type'));
+        
+        // Read raw response text once, then attempt to parse JSON from it.
+        const rawText = await response.text();
+        let result = null;
+        try {
+            result = JSON.parse(rawText);
+        } catch (err) {
+            console.error('Login: failed to parse JSON from server response:', rawText);
+            showAuthMessage('Server returned unexpected response. See console for details.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+        console.log('Login result:', result);
+        
+        if (result.success) {
+            showAuthMessage('Login successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = result.redirect || '/';
+            }, 500);
+        } else {
+            showAuthMessage(result.message || 'Login failed', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showAuthMessage('Network error: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Registration Handler
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAuthMessage();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    console.log('Starting registration process...');
+    
+    // Validation
+    if (!data.username || !data.email || !data.password || !data.display_name) {
+        showAuthMessage('Please fill in all fields', 'error');
+        return;
+    }
+    
+    // Username validation
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(data.username)) {
+        showAuthMessage('Username must be 3-20 characters (letters, numbers, _, -)', 'error');
+        return;
+    }
+    
+    // Email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        showAuthMessage('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Password validation
+    if (data.password.length < 8) {
+        showAuthMessage('Password must be at least 8 characters', 'error');
+        return;
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Generating keys...';
+    
+    showLoading('Generating encryption keys...');
+    
+    try {
+        // Attempt to use Web Crypto API to generate keys. If unavailable, proceed without keys.
+        let publicKeyB64 = null;
+
+        if (window.crypto && window.crypto.subtle) {
+            console.log('Generating RSA key pair...');
+            // Generate RSA key pair for end-to-end encryption
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: "RSA-OAEP",
+                    modulusLength: 2048,
+                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
+                    hash: "SHA-256",
+                },
+                true, // extractable
+                ["encrypt", "decrypt"]
+            );
+
+            console.log('Key pair generated successfully');
+            showLoading('Exporting keys...');
+
+            // Export private key (PKCS8 format)
+            const privateKeyPkcs8 = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+            console.log('Private key exported');
+
+            // Export public key (SPKI format)
+            const publicKeySpki = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+            console.log('Public key exported');
+
+            // Store private key in localStorage
+            const privateKeyB64 = arrayBufferToBase64(privateKeyPkcs8);
+            localStorage.setItem(`privateKey_${data.username}`, privateKeyB64);
+            console.log('Private key stored in localStorage');
+
+            // Set public key to send to server
+            publicKeyB64 = arrayBufferToBase64(publicKeySpki);
+        } else {
+            // Web Crypto not available (e.g., accessing via LAN IP over http). Proceed without keys.
+            console.warn('Web Crypto API not available; proceeding without generating keys. Encrypted messaging will be disabled until you upload keys.');
+            showAuthMessage('Warning: Web Crypto API not available. Registration will proceed but secure messaging will be disabled until you upload a public key.', 'info');
+        }
+
+        // Add public key if generated (otherwise null)
+        data.public_key = publicKeyB64;
+
+        showLoading('Creating account...');
+        submitBtn.textContent = 'Creating account...';
+        
+        console.log('Sending registration request...');
+        console.log('Registration data:', {
+            username: data.username,
+            email: data.email,
+            display_name: data.display_name,
+            has_public_key: !!data.public_key
+        });
+        
+        // Send registration data to server
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        console.log('Registration response status:', response.status);
+        console.log('Registration response headers:', response.headers.get('content-type'));
+        
+        // Read raw response text once, then attempt to parse JSON from it.
+        const rawText = await response.text();
+        let result = null;
+        try {
+            result = JSON.parse(rawText);
+        } catch (err) {
+            console.error('Registration: failed to parse JSON from server response:', rawText.substring(0, 200));
+            hideLoading();
+            showAuthMessage('Server returned unexpected response. See console for details.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
+            return;
+        }
+        console.log('Registration result:', result);
+        
+        hideLoading();
+        
+        if (result.success) {
+            showAuthMessage('Registration successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = result.redirect || '/';
+            }, 1000);
+        } else {
+            // Registration failed, remove the stored key
+            localStorage.removeItem(`privateKey_${data.username}`);
+            showAuthMessage(result.message || 'Registration failed', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
+        }
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Registration error:', error);
+        console.error('Error stack:', error.stack);
+        
+        let errorMessage = 'Registration failed: ';
+        
+        if (error.name === 'NotSupportedError') {
+            errorMessage += 'Your browser does not support encryption. Please use a modern browser (Chrome, Firefox, Safari, Edge).';
+        } else if (error.name === 'OperationError') {
+            errorMessage += 'Encryption key generation failed. Please try again.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showAuthMessage(errorMessage, 'error');
+        
+        // Clean up if key was stored
+        if (data.username) {
+            localStorage.removeItem(`privateKey_${data.username}`);
+        }
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register';
+    }
+});
+
+// Check browser compatibility on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded, checking browser compatibility...');
+    
+    if (!window.crypto || !window.crypto.subtle) {
+        showAuthMessage(
+            'Warning: Your browser does not support encryption. Please use a modern browser (Chrome, Firefox, Safari, Edge) or enable HTTPS.',
+            'error'
+        );
+    }
+    
+    // Log browser info for debugging
+    console.log('Browser:', navigator.userAgent);
+    console.log('Crypto API available:', !!window.crypto?.subtle);
+    console.log('Protocol:', window.location.protocol);
+    console.log('Hostname:', window.location.hostname);
+    
+    if (window.location.protocol !== 'https:' && 
+        window.location.hostname !== 'localhost' && 
+        window.location.hostname !== '127.0.0.1') {
+        console.warn('Not using HTTPS - encryption may not work in production');
+    }
+});
+</script>
+{% endblock %}

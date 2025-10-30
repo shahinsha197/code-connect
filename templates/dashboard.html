@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CodeConnect{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Welcome back, {{ user.display_name }}!</h1>
+        <button class="btn btn-primary" onclick="window.openModal('createPostModal')">Create Post</button>
+    </div>
+
+    <div id="createPostModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Post</h3>
+                <button class="modal-close" onclick="window.closeModal('createPostModal')">&times;</button>
+            </div>
+            <form id="createPostForm">
+                <div class="form-group">
+                    <label for="postType">Post Type</label>
+                    <select id="postType" name="post_type" onchange="toggleCodeSnippet()">
+                        <option value="text">Text Post</option>
+                        <option value="code_snippet">Code Snippet</option>
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="postContent">Content</label>
+                    <textarea id="postContent" name="content" rows="4" placeholder="What's on your mind?" required></textarea>
+                </div>
+                <div id="codeSnippetSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="codeLanguage">Language</label>
+                        <input type="text" id="codeLanguage" name="language" placeholder="e.g., javascript, python">
+                    </div>
+                    <div class="form-group">
+                        <label for="codeContent">Code</label>
+                        <textarea id="codeContent" name="code" rows="6" placeholder="Paste your code here..."></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin: 1.5rem;">Post</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="feed">
+        {% for post in posts %}
+        <div class="post-card" data-post-id="{{ post.id }}">
+            <div class="post-header">
+                <div class="post-author">
+                    <div class="author-avatar">
+                        {% if post.author.avatar %}
+                        <img src="{{ post.author.avatar }}" alt="{{ post.author.display_name }}">
+                        {% else %}
+                        <div class="avatar-placeholder">{{ post.author.display_name[0] }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="author-info">
+                        <h4><a href="/profile/{{ post.author.username }}">{{ post.author.display_name }}</a></h4>
+                        <span class="post-time">{{ post.created_at }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <p>{{ post.content | safe }}</p> {% if post.post_type == 'code_snippet' and post.code_snippet %}
+                <div class="code-snippet">
+                    <div class="code-header">
+                        <span class="code-language">{{ post.code_snippet.language or 'text' }}</span>
+                    </div>
+                    <pre><code class="language-{{ post.code_snippet.language or 'text' }}">{{ post.code_snippet.code }}</code></pre>
+                </div>
+                {% endif %}
+                
+                {% if post.repository %}
+                <div class="shared-repo">
+                    <div class="repo-icon">📁</div>
+                    <div class="repo-info">
+                        <h5><a href="/repo/{{ post.repository.owner_username }}/{{ post.repository.name }}">{{ post.repository.name }}</a></h5>
+                        <p>{{ post.repository.description }}</p>
+                        <span class="repo-language">{{ post.repository.language }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="post-actions">
+                <button class="action-btn like-btn {% if post.is_liked_by_user %}liked{% endif %}">
+                    <span class="action-icon">❤️</span>
+                    <span class="like-count">{{ post.likes }}</span>
+                </button>
+                <button class="action-btn comment-btn">
+                    <span class="action-icon">💬</span>
+                    <span>{{ post.comments }}</span>
+                </button>
+                </div>
+
+                <!-- Comments section (initially hidden; JS will toggle) -->
+                <div class="comments-section" style="display: none; margin-top: 1rem;" data-post-id="{{ post.id }}">
+                    <div class="comments-list" style="margin-bottom: .5rem;">
+                        <!-- Existing comments will be injected here -->
+                    </div>
+                    <form class="comment-form">
+                        <input type="text" name="content" class="comment-input" placeholder="Write a comment..." required style="width: 100%; padding: .5rem;">
+                        <div style="margin-top: .5rem; text-align: right;">
+                            <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+                        </div>
+                    </form>
+                </div>
+        </div>
+        {% endfor %}
+        
+        {% if not posts %}
+        <div class="empty-state">
+            <h3>Your feed is empty</h3>
+            <p>Follow some users to see their posts here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Functions for this page are in main.js
+// But we need to add listeners for the dynamic modal form
+document.addEventListener('DOMContentLoaded', () => {
+
+    function toggleCodeSnippet() {
+        const postType = document.getElementById('postType').value;
+        const codeSection = document.getElementById('codeSnippetSection');
+        if (postType === 'code_snippet') {
+            codeSection.style.display = 'block';
+        } else {
+            codeSection.style.display = 'none';
+        }
+    }
+    // Attach listener
+    document.getElementById('postType').addEventListener('change', toggleCodeSnippet);
+
+
+    document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        if (data.post_type === 'code_snippet') {
+            data.code_snippet = {
+                language: data.language,
+                code: data.code
+            };
+            delete data.language;
+            delete data.code;
+        }
+        
+        try {
+            // 'getFetchOptions' is from main.js, adds CSRF token
+            const response = await fetch('/api/create_post', getFetchOptions({
+                method: 'POST',
+                body: JSON.stringify(data)
+            }));
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                window.closeModal('createPostModal');
+                location.reload(); // Refresh to show new post
+            } else {
+                // 'showNotification' is from main.js
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('An error occurred: ' + error.message, 'error');
+        }
+    });
+});
+</script>
+{% endblock %}  

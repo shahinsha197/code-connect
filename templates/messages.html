@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - CodeConnect{% endblock %}
+
+{% block content %}
+<div class="messages-container">
+    <div class="messages-sidebar">
+        <div class="messages-header">
+            <h2>Messages</h2>
+            <div class="conversation-search">
+                <input type="text" id="conversationSearch" placeholder="Search conversations..." autocomplete="off">
+                <div id="searchResults" class="search-results" style="display:none;"></div>
+            </div>
+            <style>
+                .search-results {
+                    position: absolute;
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border-color);
+                    width: calc(100% - 40px);
+                    max-height: 300px;
+                    overflow-y: auto;
+                    z-index: 50;
+                    margin-top: 6px;
+                    border-radius: 6px;
+                    box-shadow: var(--shadow-md);
+                }
+                .search-result-item { display:flex; gap:8px; padding:8px; cursor:pointer; align-items:center; }
+                .search-result-item:hover { background: rgba(0,0,0,0.03); }
+                .search-result-item .sr-avatar img { width:36px; height:36px; border-radius:50%; }
+                .search-result-item .avatar-placeholder { width:36px; height:36px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; }
+                .search-result-item .sr-info { font-size:0.9rem; }
+                .search-result-item .sr-username { color: #666; font-size:0.8rem; }
+            </style>
+        </div>
+        
+        <div class="conversations-list">
+            {% for conv in conversations %}
+          <div class="conversation-item" 
+              data-conv-id="{{ conv.conv_id }}" 
+              data-recipient-id="{{ conv.other_user.id }}" 
+              data-recipient-username="{{ conv.other_user.username }}">
+                
+                <div class="conv-avatar">
+                    {% if conv.other_user.avatar %}
+                    <img src="{{ conv.other_user.avatar }}" alt="{{ conv.other_user.display_name }}">
+                    {% else %}
+                    <div class="avatar-placeholder">{{ conv.other_user.display_name[0] }}</div>
+                    {% endif %}
+                </div>
+                <div class="conv-info">
+                    <h4>{{ conv.other_user.display_name }}</h4>
+                    <p class="last-message">{{ conv.last_message or 'No messages yet' }}</p>
+                </div>
+                <div class="conv-time">{{ conv.last_message_time }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="messages-main">
+        <div id="noConversation" class="no-conversation">
+            <h3>Select a conversation to start messaging</h3>
+            <p>Choose from your existing conversations or start a new one</p>
+        </div>
+        
+        <div id="conversationView" class="conversation-view" style="display: none;">
+            <div class="conversation-header">
+                <div class="conv-user-info">
+                    <div class="conv-avatar">
+                        <div class="avatar-placeholder" id="convAvatar">U</div>
+                    </div>
+                    <div>
+                        <h3 id="convUserName">User Name</h3>
+                        </div>
+                </div>
+                <div class="conv-actions">
+                    </div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                </div>
+            
+            <div class="message-input-area" id="messageInputArea" style="display: none;">
+                <form id="messageForm" class="message-form">
+                    <input type="hidden" id="currentConversationId">
+                    <div class="message-input-container">
+                        <input type="text" id="messageInput" placeholder="Type a message..." required>
+                        <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New message modal removed; creation of new conversations can be done via profile pages or direct links -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Add click listeners to conversation items
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const recipientId = item.dataset.recipientId;
+            const recipientUsername = item.dataset.recipientUsername;
+            const convId = item.dataset.convId || null;
+            
+            // This function 'startOrOpenChat' is defined in main.js
+            if (window.startOrOpenChat) {
+                window.startOrOpenChat(recipientId, recipientUsername, convId);
+            } else {
+                console.error("main.js function not found.");
+            }
+        });
+    });
+
+    // Hook up conversation search box (Enter only; button removed)
+    const searchInput = document.getElementById('conversationSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const q = (searchInput.value || '').trim();
+                if (window.filterConversations) window.filterConversations(q);
+
+                // If there are no visible conversations after filtering and the
+                // query looks like a username, check server to see if that user exists.
+                const convItems = Array.from(document.querySelectorAll('.conversation-item'));
+                const visibleCount = convItems.reduce((acc, it) => acc + (it.style.display === 'none' ? 0 : 1), 0);
+
+                if (visibleCount === 0 && q.length > 0) {
+                    try {
+                        // First check existence via public_key endpoint
+                        const res = await fetch(`/api/user/${encodeURIComponent(q)}/public_key`);
+                        if (res.ok) {
+                            // User exists; start a conversation via API
+                            const startResp = await fetch(`/api/start_conversation/${encodeURIComponent(q)}`, window.getFetchOptions({ method: 'POST', body: JSON.stringify({}) }));
+                            const startData = await startResp.json();
+                            if (startResp.ok && startData.success) {
+                                // Add the conversation to the list (if missing) and open it
+                                const conv = {
+                                    conv_id: startData.client_conv_id,
+                                    conversation_id: startData.conversation_id,
+                                    other_user: startData.other_user,
+                                    last_message: ''
+                                };
+                                if (window.addConversationToList) window.addConversationToList(conv);
+                                if (window.startOrOpenChat) window.startOrOpenChat(startData.other_user.id, startData.other_user.username, startData.client_conv_id);
+                                window.showNotification(`Started chat with ${q}`, 'success');
+                            } else {
+                                window.showNotification(startData.message || 'Could not start conversation', 'error');
+                            }
+                        } else if (res.status === 404) {
+                            // user not found or no public key; parse message
+                            let data = {};
+                            try { data = await res.json(); } catch (err) { /* ignore */ }
+                            const msg = (data && data.error) ? data.error.toLowerCase() : '';
+                            if (msg.includes('not found')) {
+                                window.showNotification('This username does not exist', 'error');
+                            } else {
+                                // User exists but has no public key; still allow starting conversation
+                                const startResp = await fetch(`/api/start_conversation/${encodeURIComponent(q)}`, window.getFetchOptions({ method: 'POST', body: JSON.stringify({}) }));
+                                const startData = await startResp.json();
+                                if (startResp.ok && startData.success) {
+                                    const conv = {
+                                        conv_id: startData.client_conv_id,
+                                        conversation_id: startData.conversation_id,
+                                        other_user: startData.other_user,
+                                        last_message: ''
+                                    };
+                                    if (window.addConversationToList) window.addConversationToList(conv);
+                                    if (window.startOrOpenChat) window.startOrOpenChat(startData.other_user.id, startData.other_user.username, startData.client_conv_id);
+                                    window.showNotification(`Started chat with ${q} (recipient has no public key uploaded)`, 'warning');
+                                } else {
+                                    window.showNotification(startData.message || 'Could not start conversation', 'error');
+                                }
+                            }
+                        } else if (res.status === 401) {
+                            window.showNotification('Please log in to search users', 'warning');
+                        } else {
+                            window.showNotification('Could not verify username. Try again later.', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Username existence check failed:', err);
+                        window.showNotification('Could not verify username. Network error.', 'error');
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

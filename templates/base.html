@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CodeConnect - Social Coding Platform{% endblock %}</title>
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark_theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
+    
+    <!-- Prism.js for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="CodeConnect - A social platform for developers with end-to-end encrypted messaging">
+    <meta name="theme-color" content="#6366f1">
+</head>
+<body data-user-id="{{ user.id if user else '-1' }}" data-username="{{ user.username if user else '' }}">
+    
+    <!-- Navigation -->
+    {% if user %}
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">CodeConnect</a>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <span class="nav-icon">🏠</span>
+                    <span>Feed</span>
+                </a>
+                <a href="/messages" class="nav-link">
+                    <span class="nav-icon">💬</span>
+                    <span>Messages</span>
+                </a>
+                <a href="/repositories" class="nav-link">
+                    <span class="nav-icon">📁</span>
+                    <span>Repositories</span>
+                </a>
+                <a href="/profile/{{ user.username }}" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    <span>Profile</span>
+                </a>
+                <button id="theme-toggle-btn" class="nav-link" style="background:none; border:none; cursor:pointer;" title="Toggle theme">
+                    <span class="nav-icon">🌙</span>
+                </button>
+                <a href="/logout" class="nav-link">
+                    <span class="nav-icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <!-- Load encryption.js first (needed by main.js) -->
+    <script src="{{ url_for('static', filename='js/encryption.js') }}"></script>
+    
+    <!-- Load file-manager.js -->
+    <script src="{{ url_for('static', filename='js/file-manager.js') }}"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- Prism.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Main application script -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Page-specific scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
